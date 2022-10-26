@@ -1,13 +1,19 @@
+
 from pyexpat import model
-from flask import Flask, request, jsonify
+from urllib.robotparser import RequestRate
+from flask import Flask, request, jsonify, url_for
 from flask_mongoengine import MongoEngine
 import json
 from healthcheck import HealthCheck
-from py import code
-
+import pytest
+from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
 health = HealthCheck()
+metrics = PrometheusMetrics(app)
+
+# static information as metric
+metrics.info('app_info', 'Application info', version='1.0.3')
 
 app.config['MONGODB_SETTINGS'] = {
     'db': 'Table',
@@ -29,16 +35,15 @@ class User (db.Document):
 
 @app.route("/")
 def root_path():
-    return("pooji")
-
-
-
+    return("poojitha")
 
 def test_name():
     client = app.test_client()
     url = '/'
     response = client.get(url)
-    assert response.get_data() == b'pooji'
+    assert response.get_data() == b'poojitha'
+
+
 
 @app.route('/user/', methods=['GET'])
 def get_user():
@@ -49,16 +54,14 @@ def get_user():
         return jsonify(user)
 
 
-
-
-def test_get():
+def test_name():
     client = app.test_client()
     url = '/'
     response = client.get(url)
-    assert response.get_data() 
+    assert response.get_data() == b'pooj'
 
 
-@app.route('/user/', methods=['POST'])
+@app.route('/user/p', methods=['POST'])
 def add_user():
     record = json.loads(request.data)
     user = User(name=record['name'],
@@ -68,14 +71,7 @@ def add_user():
     return jsonify(user)
 
 
-
-def test_post():
-    client = app.test_client()
-    url = '/user'
-    response = client.get(url)
-    assert response.get_data() 
-
-@app.route('/user/<id>/', methods=['PUT'])
+@app.route('/user/<id>/p', methods=['PUT'])
 def Update_user(id):
     record = json.loads(request.data)
     user = User.objects.get_or_404(id=id)
@@ -87,17 +83,7 @@ def Update_user(id):
                     age=record["age"])
     return jsonify(user)
 
-
-
-
-def test_put():
-    client = app.test_client()
-    url = '/user/'
-    response = client.get(url)
-    assert response.status_code == 200
-
-
-@app.route('/user/<id>/', methods=['DELETE'])
+@app.route('/user/<id>/d', methods=['DELETE'])
 def delete_user(id):
     user = User.objects(id=id)
     if not user:
@@ -105,6 +91,7 @@ def delete_user(id):
     else:
         user.delete()
     return jsonify(user)
+
 
 
 
@@ -129,7 +116,8 @@ def get_poojitha():
         return jsonify(poojitha)
 
 
-
+if __name__=="__main__":
+	app.run(debug=True)
 @app.route('/poojitha/', methods=['POST'])
 def add_poojitha():
     record = json.loads(request.data)
@@ -141,7 +129,7 @@ def add_poojitha():
 
 
 
-@app.route('/poojitha/<id>/', methods=['PUT'])
+@app.route('/poojitha/<id>', methods=['PUT'])
 def Update_poojitha(id):
     record = json.loads(request.data)
     poojitha=test.objects.get_or_404(id=id)
